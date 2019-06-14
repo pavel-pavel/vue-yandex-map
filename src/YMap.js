@@ -326,9 +326,9 @@ export default {
 
         if (this.ymapEventBus.scriptIsNotAttached) {
             const yandexMapScript = document.createElement('SCRIPT');
-            const { apiKey = '', lang = 'ru_RU', version = '2.1' } = Object.assign({}, this.$options.pluginOptions, this.settings);
+            const { apiKey = '', lang = 'ru_RU', version = '2.1', coordOrder = 'latlong' } = Object.assign({}, this.$options.pluginOptions, this.settings);
             const mode = this.debug ? 'debug' : 'release';
-            const mapLink = this.mapLink || `https://api-maps.yandex.ru/${version}/?lang=${lang}${ apiKey && `&apikey=${apiKey}` }&mode=${mode}`;
+            const mapLink = this.mapLink || `https://api-maps.yandex.ru/${version}/?lang=${lang}${ apiKey && `&apikey=${apiKey}` }&mode=${mode}&coordorder=${coordOrder}`;
             yandexMapScript.setAttribute('src', mapLink);
             yandexMapScript.setAttribute('async', '');
             yandexMapScript.setAttribute('defer', '');
