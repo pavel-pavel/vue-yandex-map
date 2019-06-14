@@ -170,9 +170,9 @@ export default {
 
                 const strokeOptions = m.markerStroke ? {
                     strokeColor: m.markerStroke.color || "0066ffff",
-                    strokeOpacity: parseFloat(m.markerStroke.opacity) >= 0 ? parseFloat(m.markerStroke.opacity) : 1,
+                    strokeOpacity: m.markerStroke.opacity,
                     strokeStyle: m.markerStroke.style,
-                    strokeWidth: parseFloat(m.markerStroke.width) >= 0 ? parseFloat(m.markerStroke.width) : 1
+                    strokeWidth: m.markerStroke.width
                 } : {};
 
                 const fillOptions = m.markerFill ? {
