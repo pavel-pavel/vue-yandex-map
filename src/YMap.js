@@ -109,7 +109,7 @@ export default {
 
                 if (props.balloonTemplate) {
                     const BalloonContentLayoutClass = ymaps.templateLayoutFactory.createClass(props.balloonTemplate);
-                    balloonOptions = { balloonContentLayout: BalloonContentLayoutClass }
+                    balloonOptions = {balloonContentLayout: BalloonContentLayoutClass}
                 }
 
                 let marker = {
@@ -130,6 +130,15 @@ export default {
 
                 if (props.icon && props.icon.layout === 'default#image') {
                     marker.iconLayout = props.icon.layout;
+                    marker.iconImageHref = props.icon.imageHref;
+                    marker.iconImageSize = props.icon.imageSize;
+                    marker.iconImageOffset = props.icon.imageOffset;
+                } else if (props.icon && props.icon.layoutType === 'rotated') {
+                    marker.iconLayout = ymaps.templateLayoutFactory.createClass([
+                        '<div style="transform:rotate({{options.rotate}}deg);">',
+                        '{% include "default#image" %}',
+                        '</div>'
+                    ].join(''))
                     marker.iconImageHref = props.icon.imageHref;
                     marker.iconImageSize = props.icon.imageSize;
                     marker.iconImageOffset = props.icon.imageOffset;
@@ -166,7 +175,7 @@ export default {
                     iconImageHref: m.iconImageHref,
                     iconImageSize: m.iconImageSize,
                     iconImageOffset: m.iconImageOffset
-                } : { preset: m.icon && `islands#${utils.getIconPreset(m)}Icon` };
+                } : {preset: m.icon && `islands#${utils.getIconPreset(m)}Icon`};
 
                 const strokeOptions = m.markerStroke ? {
                     strokeColor: m.markerStroke.color || "0066ffff",
@@ -188,7 +197,14 @@ export default {
                     m.coords = [m.coords, m.circleRadius];
                 }
 
-                const obj = { properties, options, markerType, coords: m.coords, clusterName: m.clusterName, callbacks: m.callbacks }
+                const obj = {
+                    properties,
+                    options,
+                    markerType,
+                    coords: m.coords,
+                    clusterName: m.clusterName,
+                    callbacks: m.callbacks
+                }
                 const marker = utils.createMarker(obj, this.useObjectManager);
 
                 markers.push(marker);
@@ -196,13 +212,13 @@ export default {
 
             if (this.placemarks) {
                 this.placemarks.forEach(placemark => {
-                    const { markerType = 'Placemark', properties, options = {}, coords, clusterName, callbacks, balloonTemplate } = placemark;
+                    const {markerType = 'Placemark', properties, options = {}, coords, clusterName, callbacks, balloonTemplate} = placemark;
                     const type = utils.createMarkerType(markerType, this.useObjectManager);
                     if (balloonTemplate) {
                         const BalloonContentLayoutClass = ymaps.templateLayoutFactory.createClass(balloonTemplate);
                         options.balloonContentLayout = BalloonContentLayoutClass;
                     }
-                    const obj = { properties, options, markerType: type, coords, clusterName, callbacks }
+                    const obj = {properties, options, markerType: type, coords, clusterName, callbacks}
                     let yplacemark = utils.createMarker(obj, this.useObjectManager);
 
                     markers.push(yplacemark);
@@ -253,8 +269,16 @@ export default {
             this.setMarkers();
 
             this.$emit('map-was-initialized', this.myMap);
+            this.initBoundsListener()
+        },
+        initBoundsListener() {
+            let instance = this
+            this.myMap.events.add('boundschange', function (e) {
+                instance.$emit('bounds-was-changed', e);
+            })
         }
     },
+
     watch: {
         coordinates(newVal) {
             this.myMap.panTo && this.myMap.panTo(newVal)
@@ -303,30 +327,30 @@ export default {
         )
     },
     mounted() {
-        this.markerObserver = new MutationObserver(function() {
+        this.markerObserver = new MutationObserver(function () {
             this.myMap.geoObjects && this.myMap.geoObjects.removeAll();
             this.setMarkers();
         }.bind(this));
 
-        this.mapObserver = new MutationObserver(function() {
-          this.myMap.container.fitToViewport();
+        this.mapObserver = new MutationObserver(function () {
+            this.myMap.container.fitToViewport();
         }.bind(this));
 
         // Setup the observer
-        const { markersContainer, mapContainer } = this.$refs;
+        const {markersContainer, mapContainer} = this.$refs;
         this.markerObserver.observe(
             markersContainer,
-            { attributes: true, childList: true, characterData: true, subtree: true }
+            {attributes: true, childList: true, characterData: true, subtree: true}
         );
 
         this.mapObserver.observe(
             mapContainer,
-            { attributes: true, childList: true, characterData: true, subtree: false }
+            {attributes: true, childList: true, characterData: true, subtree: false}
         );
 
         if (this.ymapEventBus.scriptIsNotAttached) {
             const yandexMapScript = document.createElement('SCRIPT');
-            const { apiKey = '', lang = 'ru_RU', version = '2.1', coordOrder = 'latlong' } = Object.assign({}, this.$options.pluginOptions, this.settings);
+            const {apiKey = '', lang = 'ru_RU', version = '2.1', coordOrder = 'latlong'} = Object.assign({}, this.$options.pluginOptions, this.settings);
             const mode = this.debug ? 'debug' : 'release';
             const mapLink = this.mapLink || `https://api-maps.yandex.ru/${version}/?lang=${lang}${ apiKey && `&apikey=${apiKey}` }&mode=${mode}&coordorder=${coordOrder}`;
             yandexMapScript.setAttribute('src', mapLink);
@@ -344,8 +368,8 @@ export default {
         } else {
             this.ymapEventBus.$on('scriptIsLoaded', () => {
                 this.ymapEventBus.updateMap = () => {
-                  this.myMap.geoObjects && this.myMap.geoObjects.removeAll();
-                  this.setMarkers();
+                    this.myMap.geoObjects && this.myMap.geoObjects.removeAll();
+                    this.setMarkers();
                 };
                 ymaps.ready(this.init);
             })
